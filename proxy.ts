@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -39,9 +39,6 @@ export async function middleware(request: NextRequest) {
   if (path === '/login' && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
-
-  // Admin route protection is handled at the page/layout level
-  // (requires a profiles DB query which is too heavy for middleware)
 
   return supabaseResponse
 }
