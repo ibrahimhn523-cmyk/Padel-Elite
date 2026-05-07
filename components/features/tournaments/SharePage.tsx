@@ -4,6 +4,8 @@ import { useState } from 'react'
 import type {
   Tournament, Sponsor, MatchWithDetails, Registration, TournamentCategory,
 } from '@/lib/queries/tournaments'
+import { Bracket } from './Bracket'
+import type { MatchFull } from '@/lib/queries/matches'
 
 type Tab = 'overview' | 'bracket' | 'players' | 'sponsors'
 
@@ -94,7 +96,9 @@ export function SharePage({ tournament: t, matches, registrations, sponsors, isA
       {/* ── Content ── */}
       <div style={s.content} dir="rtl">
         {tab === 'overview'  && <OverviewTab t={t} />}
-        {tab === 'bracket'   && <BracketTab matches={matches} />}
+        {tab === 'bracket'   && (
+          <Bracket tournamentId={t.id} initialMatches={matches as unknown as MatchFull[]} />
+        )}
         {tab === 'players'   && <PlayersTab registrations={registrations} />}
         {tab === 'sponsors'  && <SponsorsTab sponsors={sponsors} />}
       </div>
@@ -139,94 +143,6 @@ function InfoItem({ icon, label, value }: { icon: string; label: string; value: 
         <div style={s.infoLabel}>{label}</div>
         <div style={s.infoValue}>{value}</div>
       </div>
-    </div>
-  )
-}
-
-// ── Bracket Tab ──────────────────────────────────────────
-
-function BracketTab({ matches }: { matches: MatchWithDetails[] }) {
-  if (!matches.length) {
-    return <Empty icon="🎾" text="لم تُضاف مباريات بعد" />
-  }
-
-  const byRound: Record<string, MatchWithDetails[]> = {}
-  for (const m of matches) {
-    if (!byRound[m.round]) byRound[m.round] = []
-    byRound[m.round].push(m)
-  }
-
-  const rounds = Object.keys(byRound).sort(sortRounds)
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {rounds.map(round => (
-        <div key={round}>
-          <h3 style={s.roundTitle}>{round}</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {byRound[round].map(m => <MatchCard key={m.id} match={m} />)}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function MatchCard({ match: m }: { match: MatchWithDetails }) {
-  const scoreA = m.sets.map(s => s.score_a)
-  const scoreB = m.sets.map(s => s.score_b)
-  const winA   = m.winner_team === 'A'
-  const winB   = m.winner_team === 'B'
-  const isLive = m.status === 'live'
-
-  return (
-    <div style={{ ...s.matchCard, borderColor: isLive ? 'var(--danger)' : 'var(--border)' }}>
-      {isLive && <div style={s.livePill}>● مباشر</div>}
-
-      {/* Team A */}
-      <div style={{ ...s.teamRow, opacity: (m.winner_team && !winA) ? 0.5 : 1 }}>
-        <TeamNames p1={m.player_a1} p2={m.player_a2} winner={winA} />
-        <Scores scores={scoreA} winner={winA} />
-      </div>
-
-      <div style={s.vs}>VS</div>
-
-      {/* Team B */}
-      <div style={{ ...s.teamRow, opacity: (m.winner_team && !winB) ? 0.5 : 1 }}>
-        <TeamNames p1={m.player_b1} p2={m.player_b2} winner={winB} />
-        <Scores scores={scoreB} winner={winB} />
-      </div>
-
-      {m.court && (
-        <div style={s.courtLabel}>ملعب {m.court}</div>
-      )}
-    </div>
-  )
-}
-
-type PS = { id: string; full_name: string; short_name: string | null; avatar_url: string | null } | null
-
-function TeamNames({ p1, p2, winner }: { p1: PS; p2: PS; winner: boolean }) {
-  const color = winner ? 'var(--accent)' : 'var(--text-1)'
-  const nameOf = (p: PS) => p ? (p.short_name ?? p.full_name.split(' ')[0]) : '؟'
-  return (
-    <span style={{ fontSize: '0.875rem', fontWeight: winner ? 700 : 500, color }}>
-      {nameOf(p1)} / {nameOf(p2)}
-    </span>
-  )
-}
-
-function Scores({ scores, winner }: { scores: number[]; winner: boolean }) {
-  if (!scores.length) return <span style={{ color: 'var(--text-3)', fontSize: '0.8125rem' }}>—</span>
-  return (
-    <div style={{ display: 'flex', gap: 4 }}>
-      {scores.map((sc, i) => (
-        <span key={i} style={{
-          minWidth: 24, textAlign: 'center',
-          fontSize: '0.875rem', fontWeight: 700,
-          color: winner ? 'var(--accent)' : 'var(--text-2)',
-        }}>{sc}</span>
-      ))}
     </div>
   )
 }
@@ -419,14 +335,6 @@ const s: Record<string, React.CSSProperties> = {
   infoIcon:    { fontSize: '1.125rem', flexShrink: 0 },
   infoLabel:   { fontSize: '0.6875rem', color: 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 2 },
   infoValue:   { fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-1)' },
-
-  // Bracket
-  roundTitle: { fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: '0.625rem' },
-  matchCard:  { background: 'var(--surface)', border: '1px solid', borderRadius: 'var(--radius)', padding: '0.875rem', display: 'flex', flexDirection: 'column' as const, gap: '0.5rem', position: 'relative' as const },
-  livePill:   { position: 'absolute' as const, top: 8, left: 10, fontSize: '0.625rem', fontWeight: 700, color: '#EF4444', letterSpacing: '0.05em' },
-  teamRow:    { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  vs:         { fontSize: '0.6875rem', color: 'var(--text-3)', fontWeight: 700, textAlign: 'center' as const, letterSpacing: '0.08em' },
-  courtLabel: { fontSize: '0.6875rem', color: 'var(--text-3)', marginTop: 2 },
 
   // Players
   playersHeader: { marginBottom: '1rem' },
