@@ -1,4 +1,4 @@
-import type { MatchFull } from '@/lib/queries/matches'
+import type { MatchFull } from '@/lib/utils/match-mapper'
 
 const ar = (n: number) => n.toLocaleString('ar-SA')
 

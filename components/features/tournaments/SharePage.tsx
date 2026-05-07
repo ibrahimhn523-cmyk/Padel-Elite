@@ -5,7 +5,7 @@ import type {
   Tournament, Sponsor, MatchWithDetails, Registration, TournamentCategory,
 } from '@/lib/queries/tournaments'
 import { Bracket } from './Bracket'
-import type { MatchFull } from '@/lib/queries/matches'
+import type { MatchFull } from '@/lib/utils/match-mapper'
 
 type Tab = 'overview' | 'bracket' | 'players' | 'sponsors'
 

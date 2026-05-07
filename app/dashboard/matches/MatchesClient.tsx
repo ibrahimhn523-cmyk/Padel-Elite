@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { MatchRow } from '@/components/features/matches/MatchRow'
 import { LiveMatchBanner } from '@/components/features/matches/LiveMatchBanner'
-import type { MatchFull, MatchStatus } from '@/lib/queries/matches'
+import type { MatchFull, MatchStatus } from '@/lib/utils/match-mapper'
 
 type Filter = 'all' | MatchStatus
 

@@ -3,7 +3,7 @@
 import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { submitResult } from '@/lib/actions/results'
-import type { MatchFull } from '@/lib/queries/matches'
+import type { MatchFull } from '@/lib/utils/match-mapper'
 
 type SetEntry = { score_a: string; score_b: string }
 

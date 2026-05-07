@@ -1,48 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
-import type { PlayerSnap, MatchSet } from './tournaments'
+import {
+  mapMatchRows,
+  type MatchFull,
+  type MatchStatus,
+  type PlayerSnap,
+} from '@/lib/utils/match-mapper'
 
-export type MatchStatus = 'upcoming' | 'live' | 'done'
-
-export type MatchFull = {
-  id: string
-  tournament_id: string
-  tournament_name: string
-  round: string
-  court: string | null
-  scheduled_at: string | null
-  status: MatchStatus
-  player_a1: PlayerSnap | null
-  player_a2: PlayerSnap | null
-  player_b1: PlayerSnap | null
-  player_b2: PlayerSnap | null
-  winner_team: 'A' | 'B' | null
-  sets: MatchSet[]
-}
-
-// ── shared mapper (used by server queries AND client realtime) ─
-
-export function mapMatchRows(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  rows: any[],
-  profileMap: Record<string, PlayerSnap>,
-): MatchFull[] {
-  return rows.map(m => ({
-    id:              m.id,
-    tournament_id:   m.tournament_id,
-    tournament_name: (m.tournaments as { name: string } | null)?.name ?? '—',
-    round:           m.round,
-    court:           m.court ?? null,
-    scheduled_at:    m.scheduled_at ?? null,
-    status:          m.status as MatchStatus,
-    player_a1:       m.player_a1_id ? (profileMap[m.player_a1_id] ?? null) : null,
-    player_a2:       m.player_a2_id ? (profileMap[m.player_a2_id] ?? null) : null,
-    player_b1:       m.player_b1_id ? (profileMap[m.player_b1_id] ?? null) : null,
-    player_b2:       m.player_b2_id ? (profileMap[m.player_b2_id] ?? null) : null,
-    winner_team:     m.winner_team as 'A' | 'B' | null,
-    sets:            ((m.match_sets as MatchSet[] | null) ?? [])
-                       .sort((a, b) => a.set_number - b.set_number),
-  }))
-}
+// Re-export so server components can still import from here
+export type { MatchFull, MatchStatus } from '@/lib/utils/match-mapper'
+export { mapMatchRows } from '@/lib/utils/match-mapper'
 
 // ── Server queries ───────────────────────────────────────────
 
@@ -84,7 +50,7 @@ export async function getMatch(id: string): Promise<MatchFull | null> {
   return mapMatchRows([m], profileMap)[0] ?? null
 }
 
-// ── helper: fetch profiles for a set of match rows ───────────
+// ── helper ───────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function resolveProfiles(supabase: any, rows: any[]): Promise<Record<string, PlayerSnap>> {

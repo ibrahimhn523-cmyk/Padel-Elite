@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { mapMatchRows, type MatchFull } from '@/lib/queries/matches'
-import type { PlayerSnap, MatchSet } from '@/lib/queries/tournaments'
+import { mapMatchRows, type MatchFull, type PlayerSnap, type MatchSet } from '@/lib/utils/match-mapper'
 
 const ar = (n: number) => n.toLocaleString('ar-SA')
 const nameOf = (p: { short_name: string | null; full_name: string } | null) =>
